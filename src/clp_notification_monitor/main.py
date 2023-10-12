@@ -194,6 +194,14 @@ def main(argv: List[str]) -> int:
             " trigger period in milliseconds."
         ),
     )
+    parser.add_argument(
+        "--group-by-paths-under-prefix",
+        default="/nonexistent",
+        help=(
+            "Files under this path prefix will be grouped by folders when they are to be compressed"
+            " into archives."
+        ),
+    )
 
     input_type_parser: argparse._SubParsersAction = parser.add_subparsers(dest="input_type")
     input_type_parser.required = True
@@ -215,10 +223,14 @@ def main(argv: List[str]) -> int:
     db_uri: str = args.db_uri
     max_buffer_size: int = args.max_buffer_size
     min_refresh_period: int = args.min_refresh_frequency
+    group_by_paths_under_prefix: Path = Path(args.group_by_paths_under_prefix)
     input_type: str = args.input_type
 
     if not filer_notification_path_prefix.is_absolute():
         parser.error("--filer-notification-path-prefix must be absolute.")
+
+    if not group_by_paths_under_prefix.is_absolute():
+        parser.error("--group-by-paths-under-prefix must be absolute.")
 
     seaweed_mnt_prefix: Path = Path("/")
     if "fs" == input_type:
@@ -244,6 +256,7 @@ def main(argv: List[str]) -> int:
                 logger=logger,
                 max_buffer_size=max_buffer_size,
                 min_refresh_period=min_refresh_period,
+                group_by_paths_under_prefix=group_by_paths_under_prefix,
             )
         except Exception as e:
             logger.error(f"Failed to initiate Compression Buffer: {e}")
